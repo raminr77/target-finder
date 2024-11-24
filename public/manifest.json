@@ -1,0 +1,11 @@
+{
+    "version": "1.0.0",
+    "manifest_version": 3,
+    "name": "Target Finder",
+    "description": "A Google Chrome Extension to Help You Discover and Evaluate Your Target Within Web Pages.",
+    "action": {
+        "default_icon": "logo.png",
+        "default_popup": "index.html"
+    },
+    "permissions": []
+}
