@@ -2,10 +2,34 @@
     "version": "1.0.0",
     "manifest_version": 3,
     "name": "Target Finder",
+    "author": "Ramin Rezaei",
     "description": "A Google Chrome Extension to Help You Discover and Evaluate Your Target Within Web Pages.",
     "action": {
-        "default_icon": "logo.png",
-        "default_popup": "index.html"
+        "default_title": "Find Your Target",
+        "default_popup": "index.html",
+        "default_icon": {
+            "16": "icons/icon-16.png",
+            "32": "icons/icon-32.png",
+            "48": "icons/icon-48.png",
+            "128": "icons/icon-128.png"
+        }
     },
-    "permissions": []
+    "icons": {
+        "16": "icons/icon-16.png",
+        "32": "icons/icon-32.png",
+        "48": "icons/icon-48.png",
+        "128": "icons/icon-128.png"
+    },
+    "background": {
+        "service_worker": "service_worker.js"
+    },
+    "host_permissions": [
+        "http://*/*",
+        "https://*/*"
+    ],
+    "permissions": [
+        "tabs",
+        "activeTab",
+        "scripting"
+    ]
 }
