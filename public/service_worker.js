@@ -1,6 +1,5 @@
 const handleLoad = (tabData) => {
-    console.log('handle AI', tabData);
-    chrome.action.setBadgeText({ text: 'Active', tabId: tabData.id });
+    console.log('Tab Content Loaded:', tabData);
 };
 
 chrome.tabs.onActivated.addListener(async (activeInfo) => {

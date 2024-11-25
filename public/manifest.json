@@ -23,6 +23,12 @@
     "background": {
         "service_worker": "service_worker.js"
     },
+    "content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "js": ["content-script.js"]
+        }
+    ],
     "host_permissions": [
         "http://*/*",
         "https://*/*"
