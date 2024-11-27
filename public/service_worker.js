@@ -1,14 +1,25 @@
-const handleLoad = (tabData) => {
-    console.log('Tab Content Loaded:', tabData);
-};
+async function showSummary(tabId) {
+  const tab = await chrome.tabs.get(tabId);
 
-chrome.tabs.onActivated.addListener(async (activeInfo) => {
-  const tab = await chrome.tabs.get(activeInfo.tabId);
-  handleLoad(tab);
-});
-
-chrome.tabs.onUpdated.addListener((_, changeInfo, tab) => {
-  if (changeInfo.status === 'complete') {
-    handleLoad(tab);
+  if (!tab.url.startsWith('http')) {
+    return;
   }
+
+  const injection = await chrome.scripting.executeScript({
+    target: { tabId },
+    files: ['content-script.js']
+  });
+
+  chrome.storage.session.set({ pageContent: injection[0].result });
+}
+
+chrome.sidePanel
+  .setPanelBehavior({ openPanelOnActionClick: true })
+  .catch((error) => console.error(error));
+
+chrome.tabs.onActivated.addListener((activeInfo) => {
+  showSummary(activeInfo.tabId);
+});
+chrome.tabs.onUpdated.addListener(async (tabId) => {
+  showSummary(tabId);
 });

@@ -1,49 +1,61 @@
-import { useState, useEffect } from 'react';
-import { Content } from './components/content';
-import { APP_VERSION } from './constants';
-import type { TabContent } from './types';
+import { useRef, useState } from 'react';
+import { Loading } from './components/loading';
+import { MAX_MODEL_CHARACTERS, ERROR_MESSAGES } from './constants';
+import { documentParser, documentCreator, summaryGenerator } from './helpers';
+import { SummaryContent } from './components/summary-content';
 
 export function App() {
-  const [targets, setTargets] = useState<string[]>([]);
-  const [tabContentData, setTabContentData] = useState<TabContent | null>(null);
+  const pageContent = useRef<string>('');
+  const [error, setError] = useState<string>('');
+  const [summary, setSummary] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const handleSummarize = () => {
-      setTargets(targets);  
+  const handleGenerateSummary = (content: string) => {
+    if (content.length > MAX_MODEL_CHARACTERS) {
+      setError(ERROR_MESSAGES.MORE_THAN_MAXIMUM_LENGTH(content.length));
+    }
+    setIsLoading(true);
+    summaryGenerator(content)
+      .then(
+        (result) => setSummary(result as string)
+      )
+      .catch((error) => setError(error))
+      .finally(() => setIsLoading(false));
   };
 
-  useEffect(() => {
-    chrome.tabs.query({
-      active: true, lastFocusedWindow: true
-    }).then((tabs) => {
-      const tabId = tabs[0].id || 0;
-      chrome.tabs.sendMessage(tabId, '', (response: { content: string }) => {
-        setTabContentData({
-          ...response,
-          ...tabs[0]
-        });
-      });
-    });
-  }, []);
+  const handleParseContent = (domContent: string) => {
+    setError('');
+    const htmlDocument = documentCreator(domContent);
+    const newPageContent = documentParser(htmlDocument);
 
+    if (pageContent.current !== newPageContent) {
+      pageContent.current = newPageContent;
+
+      if (newPageContent) {
+        handleGenerateSummary(newPageContent);
+      } else {
+        setError(ERROR_MESSAGES.EMPTY_PAGE);
+      }
+    }
+  };
+
+  chrome.storage.session.get('pageContent', ({ pageContent }) => {
+    handleParseContent(pageContent);
+  });
+
+  chrome.storage.session.onChanged.addListener((changes) => {
+    const pageContent = changes['pageContent'];
+    handleParseContent(pageContent.newValue);
+  });
+  
   return (
-    <div className="target-finder-container flex justify-center flex-col gap-2 select-none">
-      <header className="flex justify-between mb-3 shadow-md p-4">
-        <img className="h-8" src="Logo-with-text.png" />
-        <div className='flex items-center gap-2'>
-          <button
-            onClick={handleSummarize}
-            className="bg-violet-600 hover:bg-violet-500 duration-300 rounded-md px-3 leading-8 text-sm"
-          >
-            Summarize Content
-          </button>
-        </div>
-      </header>
-
-      <Content title={tabContentData?.title} />
-
-      <footer className='p-4 text-xs flex items-center justify-center'>
-        {`Version ${APP_VERSION}`}
-      </footer>
+    <div className="w-full h-screen flex flex-col gap-2 select-none p-4">
+      <SummaryContent text={summary} />
+      {isLoading && (<Loading />)}
+      
+      {error && (
+        <div className='text-sm text-red-500 w-full my-4'>{error}</div>
+      )}
     </div>
-  )
+  );
 }

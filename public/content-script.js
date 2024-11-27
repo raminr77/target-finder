@@ -1,5 +1,5 @@
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  sendResponse({
-    content: document.body.innerHTML
-  });
-});
+function getCurrentTabDOM() {
+  return document.body.innerHTML || null;
+}
+
+getCurrentTabDOM();
